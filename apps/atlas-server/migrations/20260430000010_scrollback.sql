@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS session_scrollback (
+    session_id TEXT PRIMARY KEY REFERENCES ai_sessions(id) ON DELETE CASCADE,
+    content    TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

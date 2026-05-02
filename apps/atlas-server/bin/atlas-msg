@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Atlas Message Tool
+# Usage: atlas-msg <to_session_id> <message>
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: atlas-msg <to_session_id> <message>"
+    exit 1
+fi
+
+FROM_ID=$ATLAS_SESSION_ID
+TO_ID=$1
+shift
+MESSAGE="$*"
+
+if [ -z "$FROM_ID" ]; then
+    echo "Error: ATLAS_SESSION_ID not found in environment."
+    exit 1
+fi
+
+curl -s -X POST "http://localhost:4000/api/sessions/$FROM_ID/send" \
+  -H "Content-Type: application/json" \
+  -d "{\"toSessionId\": \"$TO_ID\", \"content\": \"$MESSAGE\"}" > /dev/null
+
+echo "✓ Message sent to $TO_ID"

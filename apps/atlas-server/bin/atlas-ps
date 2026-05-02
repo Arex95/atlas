@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Atlas Process Auditor (Silenced Version)
+# Usage: atlas-ps
+
+echo "🔍 Scanning for Atlas Orchestrator processes..."
+echo "------------------------------------------------"
+printf "%-10s %-25s %-40s\n" "PID" "SESSION_ID" "COMMAND"
+
+# Iterate only through processes we can actually read
+for pid_dir in /proc/[0-9]*/; do
+    # Only check if we have read permission to avoid "Permission denied"
+    if [ -r "${pid_dir}environ" ]; then
+        # Use grep silently and only match the exact variable
+        session_id=$(grep -ao 'ATLAS_SESSION_ID=[^[:cntrl:]]*' "${pid_dir}environ" 2>/dev/null | cut -d= -f2)
+        
+        if [ -n "$session_id" ]; then
+            # Format command line (replace null terminators with spaces)
+            cmd=$(cat "${pid_dir}cmdline" 2>/dev/null | tr '\0' ' ')
+            pid_num=$(basename "$pid_dir")
+            
+            # Print the row
+            printf "%-10s %-25s %-40s\n" "$pid_num" "$session_id" "$cmd"
+        fi
+    fi
+done

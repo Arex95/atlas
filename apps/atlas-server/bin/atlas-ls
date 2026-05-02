@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Atlas List Tool
+# Usage: atlas-ls
+
+# Fetch projects and extract slugs from the .data array
+curl -s http://localhost:4000/api/projects | jq -r '.data[].slug' | while read slug; do
+  echo "Project: $slug"
+  # Fetch sessions for each project and extract from .data
+  curl -s "http://localhost:4000/api/projects/$slug/sessions" | jq -r '.data[] | "  - \(.id) [\(.model)] \(.title // "Unnamed")"'
+done

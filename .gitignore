@@ -1,0 +1,53 @@
+# Node
+node_modules/
+.pnpm-debug.log*
+
+# Rust
+target/
+Cargo.lock.bak
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Turbo cache
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# SQLite (Atlas creates atlas-data/atlas.db on first run)
+atlas-data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Misc caches
+.cache/
+.eslintcache
+
+# Private local directories
+backlog/
+docs/
+CLAUDE.md
+PROJECT_INDEX.md
+
+# Compiled atlas binary in bin/ (shell wrappers atlas-ls/msg/ps are tracked)
+apps/atlas-server/bin/atlas

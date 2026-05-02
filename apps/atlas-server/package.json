@@ -1,0 +1,11 @@
+{
+  "name": "@atlas/atlas-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Atlas Orchestrator - Rust/Axum backend",
+  "scripts": {
+    "dev": "cargo run --bin atlas-server",
+    "build": "cargo build --release --bin atlas-server",
+    "clean": "cargo clean"
+  }
+}

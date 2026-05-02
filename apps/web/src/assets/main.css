@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0c0c0c;
+  --color-bg-sidebar: #111111;
+  --color-bg-card: #181818;
+  --color-bg-card-hover: #1e1e1e;
+  --color-bg-elevated: #1a1a1a;     
+  --color-bg-elevated-2: #151515;   
+  --color-bg-disabled: #333333;     
+
+  --color-border-primary: #1e1e1e;
+  --color-border-card: #242424;
+  --color-border-subtle: #181818;
+
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #999999;
+  --color-text-tertiary: #555555;
+
+  --color-accent-green: #3fb950;
+  --color-accent-red: #f85149;
+  --color-accent-blue: #3b82f6;
+  --color-accent-purple: #a855f7;
+  --color-accent-orange: #f97316;
+  --color-accent-yellow: #eab308;
+  --color-accent-cyan: #22d3ee;
+
+  /* Agent identity palette — one token per slot, used only for agent color-coding */
+  --color-agent-1: #60a5fa;
+  --color-agent-2: #c084fc;
+  --color-agent-3: #4ade80;
+  --color-agent-4: #facc15;
+  --color-agent-5: #f472b6;
+  --color-agent-6: #22d3ee;
+
+  --shadow-premium: none;
+  --shadow-card: none;
+}
+
+@layer base {
+  html, body {
+    @apply h-full bg-bg-primary text-text-primary overflow-hidden font-sans;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

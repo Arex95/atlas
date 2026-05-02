@@ -1,0 +1,11 @@
+pub const TERMINAL_OUTPUT: &str = "terminal:output";
+pub const TERMINAL_INPUT: &str = "terminal:input";
+pub const TERMINAL_RESIZE: &str = "terminal:resize";
+pub const TERMINAL_FORCE_WRITE: &str = "terminal:force_write";
+pub const TERMINAL_SECURITY_ALERT: &str = "terminal:security_alert";
+pub const SESSION_MESSAGE: &str = "session:message";
+pub const SESSION_RECEIVE_MESSAGE: &str = "session:receive_message";
+pub const SESSION_UPDATED: &str = "session:updated";
+pub const SESSION_SPAWN: &str = "session:spawn";
+pub const SUBSCRIBE_SESSION: &str = "subscribe:session";
+pub const NOTIFICATION_NEW: &str = "notification:new";

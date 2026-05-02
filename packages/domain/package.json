@@ -1,0 +1,19 @@
+{
+  "name": "@atlas/domain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript types consumed by the Vue frontend",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
