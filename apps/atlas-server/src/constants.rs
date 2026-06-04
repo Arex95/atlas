@@ -67,3 +67,17 @@ pub mod indexer {
     pub const IGNORED: &[&str] =
         &["node_modules", ".git", "target", "dist", ".next", "PROJECT_INDEX.md"];
 }
+
+pub mod doc {
+    pub const DEFAULT_KIND: &str = "document";
+    pub const DEFAULT_LINKS: &str = "[]";
+    pub const MAX_CONTENT_BYTES: usize = 5 * 1024 * 1024;
+    pub const MAX_LINKED_DOCS: usize = 20;
+}
+
+pub mod spawn {
+    pub const DEFAULT_TITLE: &str = "worker";
+    pub const DEFAULT_PROVIDER: &str = "claude";
+    pub const DEFAULT_MODEL: &str = "claude-sonnet-4-6";
+    pub const DEFAULT_MODE: &str = "agent";
+}

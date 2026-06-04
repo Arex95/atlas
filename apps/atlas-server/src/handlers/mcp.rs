@@ -1,7 +1,7 @@
-use crate::constants::{defaults, env, errors, response, terminal as term_consts};
+use crate::constants::{defaults, doc as doc_consts, env, errors, response, spawn as spawn_consts, terminal as term_consts};
 use crate::dtos::session::CreateSessionRequest;
 use crate::mcp::{McpRequest, jsonrpc_error, jsonrpc_success};
-use crate::repositories::{document as doc_repo, global as global_repo, project as project_repo, reminder as reminder_repo, session as session_repo, skill as skill_repo, task as task_repo};
+use crate::repositories::{document as doc_repo, global as global_repo, project as project_repo, reminder as reminder_repo, session as session_repo, session_document as sd_repo, skill as skill_repo, task as task_repo};
 use crate::services::notification as notif_svc;
 use crate::services::session as session_svc;
 use crate::socket_events;
@@ -764,7 +764,7 @@ pub async fn handle_mcp_request(
                     }
                 }
                 "list_documents" => {
-                    use crate::repositories::{session_document as sd_repo};
+
                     let scope = arguments.get("scope").and_then(|v| v.as_str()).unwrap_or("session");
                     let kind = arguments.get("type").and_then(|v| v.as_str());
                     if scope == "project" {
@@ -790,38 +790,36 @@ pub async fn handle_mcp_request(
                 }
                 "read_document" => {
                     let id = arguments.get("id").and_then(|v| v.as_str()).unwrap_or("");
-                    // Try project docs first, then session docs via direct query.
                     if let Ok(Some(d)) = doc_repo::find_full_by_id(&pool, id).await {
                         return Json(jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": format!("# {}\n\n{}", d.title, d.content) }] }))).into_response();
                     }
-                    match sqlx::query_as::<_, (String, String)>(
-                        "SELECT title, content FROM session_documents WHERE id = ?",
-                    )
-                    .bind(id)
-                    .fetch_optional(&pool)
-                    .await
-                    {
-                        Ok(Some((title, content))) => jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": format!("# {}\n\n{}", title, content) }] })),
+                    match sd_repo::find_full_by_id(&pool, id).await {
+                        Ok(Some(d)) => jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": format!("# {}\n\n{}", d.title, d.content) }] })),
                         Ok(None) => jsonrpc_error(request.id, -32602, "Document not found"),
                         Err(e) => jsonrpc_error(request.id, -32603, &e.to_string()),
                     }
                 }
                 "create_document" => {
-                    use crate::repositories::session_document as sd_repo;
                     let scope = arguments.get("scope").and_then(|v| v.as_str()).unwrap_or("session");
                     let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("");
                     let content = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("");
-                    let kind = arguments.get("type").and_then(|v| v.as_str()).unwrap_or("document");
-                    let links = arguments.get("links").and_then(|v| v.as_str()).unwrap_or("[]");
+                    let kind = arguments.get("type").and_then(|v| v.as_str()).unwrap_or(doc_consts::DEFAULT_KIND);
+                    let links = arguments.get("links").and_then(|v| v.as_str()).unwrap_or(doc_consts::DEFAULT_LINKS);
                     if title.is_empty() {
                         return Json(jsonrpc_error(request.id, -32602, errors::MISSING_PARAMS)).into_response();
+                    }
+                    if content.len() > doc_consts::MAX_CONTENT_BYTES {
+                        return Json(jsonrpc_error(request.id, -32602, errors::FILE_TOO_LARGE)).into_response();
+                    }
+                    if serde_json::from_str::<Vec<serde_json::Value>>(links).is_err() {
+                        return Json(jsonrpc_error(request.id, -32602, "links must be a JSON array of document IDs")).into_response();
                     }
                     let doc_id = ulid::Ulid::new().to_string();
                     if scope == "project" {
                         let project_id = arguments.get("projectId").and_then(|v| v.as_str()).unwrap_or("");
                         let resolved_pid = match crate::repositories::project::resolve_id(&pool, project_id).await {
                             Ok(id) => id,
-                            Err(_) => return Json(jsonrpc_error(request.id, -32602, "Project not found")).into_response(),
+                            Err(_) => return Json(jsonrpc_error(request.id, -32602, errors::PROJECT_NOT_FOUND)).into_response(),
                         };
                         match doc_repo::create_simple(&pool, &doc_id, &resolved_pid, title, content, kind, links).await {
                             Ok(_) => jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": format!("Created project document '{}' (id: {})", title, doc_id) }] })),
@@ -839,7 +837,6 @@ pub async fn handle_mcp_request(
                     }
                 }
                 "write_document" => {
-                    use crate::repositories::session_document as sd_repo;
                     let id = arguments.get("id").and_then(|v| v.as_str()).unwrap_or("");
                     let content = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("");
                     let title = arguments.get("title").and_then(|v| v.as_str());
@@ -847,9 +844,18 @@ pub async fn handle_mcp_request(
                     if id.is_empty() {
                         return Json(jsonrpc_error(request.id, -32602, errors::MISSING_PARAMS)).into_response();
                     }
-                    // Try session doc first, then project doc
-                    if let Ok(true) = sd_repo::write_content(&pool, id, content, title, links).await {
-                        return Json(jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": "Session document updated" }] }))).into_response();
+                    if content.len() > doc_consts::MAX_CONTENT_BYTES {
+                        return Json(jsonrpc_error(request.id, -32602, errors::FILE_TOO_LARGE)).into_response();
+                    }
+                    if let Some(l) = links {
+                        if serde_json::from_str::<Vec<serde_json::Value>>(l).is_err() {
+                            return Json(jsonrpc_error(request.id, -32602, "links must be a JSON array of document IDs")).into_response();
+                        }
+                    }
+                    match sd_repo::write_content(&pool, id, content, title, links).await {
+                        Ok(true) => return Json(jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": "Session document updated" }] }))).into_response(),
+                        Ok(false) => {}
+                        Err(e) => return Json(jsonrpc_error(request.id, -32603, &e.to_string())).into_response(),
                     }
                     match doc_repo::write_content(&pool, id, content, title, links).await {
                         Ok(true) => jsonrpc_success(request.id, json!({ "content": [{ "type": "text", "text": "Project document updated" }] })),
@@ -858,7 +864,6 @@ pub async fn handle_mcp_request(
                     }
                 }
                 "delete_document" => {
-                    use crate::repositories::session_document as sd_repo;
                     let id = arguments.get("id").and_then(|v| v.as_str()).unwrap_or("");
                     // Try session doc first, then project doc
                     if let Ok(true) = sd_repo::delete(&pool, id).await {
@@ -1210,28 +1215,32 @@ pub async fn handle_mcp_request(
                     };
                     let slug = match project_repo::find_slug_by_id(&pool, &project_id).await {
                         Ok(Some(s)) => s,
-                        _ => return Json(jsonrpc_error(request.id, -32603, "Project not found")).into_response(),
+                        Ok(None) => return Json(jsonrpc_error(request.id, -32603, errors::PROJECT_NOT_FOUND)).into_response(),
+                        Err(e) => return Json(jsonrpc_error(request.id, -32603, &e.to_string())).into_response(),
                     };
-
                     let default_author = std::env::var(env::ATLAS_DEFAULT_AUTHOR)
                         .unwrap_or_else(|_| defaults::AUTHOR.to_string());
-
                     let title = arguments.get("title").and_then(|v| v.as_str())
-                        .unwrap_or("worker").to_string();
+                        .unwrap_or(spawn_consts::DEFAULT_TITLE).to_string();
                     let provider = arguments.get("provider").and_then(|v| v.as_str())
-                        .unwrap_or("claude").to_string();
+                        .unwrap_or(spawn_consts::DEFAULT_PROVIDER).to_string();
                     let model = arguments.get("model").and_then(|v| v.as_str())
-                        .unwrap_or("claude-sonnet-4-6").to_string();
+                        .unwrap_or(spawn_consts::DEFAULT_MODEL).to_string();
                     let working_directory = arguments.get("workingDirectory").and_then(|v| v.as_str())
                         .unwrap_or("").to_string();
-
-                    let req = CreateSessionRequest { provider, model, mode: "agent".to_string(), working_directory, title };
+                    let req = CreateSessionRequest {
+                        provider,
+                        model,
+                        mode: spawn_consts::DEFAULT_MODE.to_string(),
+                        working_directory,
+                        title,
+                    };
                     match session_svc::create(&pool, &slug, &req, &default_author).await {
                         Ok(Some(session)) => jsonrpc_success(
                             request.id,
                             json!({ "content": [{ "type": "text", "text": format!("Session spawned. id={} title={}", session.id, session.title.unwrap_or_default()) }] }),
                         ),
-                        Ok(None) => jsonrpc_error(request.id, -32603, "Project not found"),
+                        Ok(None) => jsonrpc_error(request.id, -32603, errors::PROJECT_NOT_FOUND),
                         Err(e) => jsonrpc_error(request.id, -32603, &e.to_string()),
                     }
                 }
@@ -1240,12 +1249,15 @@ pub async fn handle_mcp_request(
                     if target_id.is_empty() {
                         return Json(jsonrpc_error(request.id, -32602, errors::MISSING_PARAMS)).into_response();
                     }
-                    // Project isolation: only allow closing sessions in the same project.
-                    if let Some(ref my_pid) = caller_project_id {
-                        let target_pid = session_repo::find_project_id(&pool, target_id).await.ok().flatten();
-                        if target_pid.as_deref() != Some(my_pid.as_str()) {
+                    let target_pid = session_repo::find_project_id(&pool, target_id).await.ok().flatten();
+                    match caller_project_id.as_deref() {
+                        Some(my_pid) if target_pid.as_deref() != Some(my_pid) => {
                             return Json(jsonrpc_error(request.id, -32603, "Cross-project session close is not allowed")).into_response();
                         }
+                        None if target_pid.is_some() => {
+                            return Json(jsonrpc_error(request.id, -32603, "Authenticated project context required to close a session")).into_response();
+                        }
+                        _ => {}
                     }
                     tm.kill_session(target_id).await;
                     match session_svc::delete(&pool, target_id).await {
@@ -1257,36 +1269,30 @@ pub async fn handle_mcp_request(
                     }
                 }
                 "get_document_links" => {
-                    use crate::repositories::session_document as sd_repo;
                     let id = arguments.get("id").and_then(|v| v.as_str()).unwrap_or("");
                     if id.is_empty() {
                         return Json(jsonrpc_error(request.id, -32602, errors::MISSING_PARAMS)).into_response();
                     }
-
                     let (root_title, root_content, root_links) =
                         if let Ok(Some(d)) = doc_repo::find_full_by_id(&pool, id).await {
                             (d.title, d.content, d.links)
                         } else {
-                            match sqlx::query_as::<_, (String, String, String)>(
-                                "SELECT title, content, links FROM session_documents WHERE id = ?",
-                            )
-                            .bind(id)
-                            .fetch_optional(&pool)
-                            .await
-                            {
-                                Ok(Some((t, c, l))) => (t, c, l),
-                                _ => return Json(jsonrpc_error(request.id, -32602, "Document not found")).into_response(),
+                            match sd_repo::find_full_by_id(&pool, id).await {
+                                Ok(Some(d)) => (d.title, d.content, d.links),
+                                Ok(None) => return Json(jsonrpc_error(request.id, -32602, "Document not found")).into_response(),
+                                Err(e) => return Json(jsonrpc_error(request.id, -32603, &e.to_string())).into_response(),
                             }
                         };
-
+                    if serde_json::from_str::<Vec<serde_json::Value>>(&root_links).is_err() {
+                        return Json(jsonrpc_error(request.id, -32603, "Document has malformed links field")).into_response();
+                    }
                     let linked_proj = doc_repo::find_linked(&pool, &root_links).await.unwrap_or_default();
                     let linked_sess = sd_repo::find_linked(&pool, &root_links).await.unwrap_or_default();
-
                     let linked: Vec<serde_json::Value> = linked_proj.iter()
                         .map(|d| json!({ "id": d.id, "title": d.title, "kind": d.kind, "content": d.content, "links": d.links }))
                         .chain(linked_sess.iter().map(|d| json!({ "id": d.id, "title": d.title, "kind": d.kind, "content": d.content, "links": d.links })))
+                        .take(doc_consts::MAX_LINKED_DOCS)
                         .collect();
-
                     let result = json!({
                         "root": { "id": id, "title": root_title, "content": root_content, "links": root_links },
                         "linked": linked

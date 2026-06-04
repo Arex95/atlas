@@ -11,6 +11,15 @@ pub struct SessionDocumentRow {
     pub updated_at: String,
 }
 
+#[derive(sqlx::FromRow, serde::Serialize)]
+pub struct SessionDocFullRow {
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub kind: String,
+    pub links: String,
+}
+
 pub async fn create(
     pool: &SqlitePool,
     id: &str,
@@ -35,7 +44,11 @@ pub async fn create(
     Ok(())
 }
 
-pub async fn find_all(pool: &SqlitePool, session_id: &str, kind: Option<&str>) -> sqlx::Result<Vec<SessionDocumentRow>> {
+pub async fn find_all(
+    pool: &SqlitePool,
+    session_id: &str,
+    kind: Option<&str>,
+) -> sqlx::Result<Vec<SessionDocumentRow>> {
     if let Some(k) = kind {
         sqlx::query_as::<_, SessionDocumentRow>(
             "SELECT id, title, content, kind, links, created_at, updated_at
@@ -56,10 +69,24 @@ pub async fn find_all(pool: &SqlitePool, session_id: &str, kind: Option<&str>) -
     }
 }
 
-/// Returns session documents whose IDs appear in the given JSON array string.
-pub async fn find_linked(pool: &SqlitePool, links_json: &str) -> sqlx::Result<Vec<SessionDocumentRow>> {
-    sqlx::query_as::<_, SessionDocumentRow>(
-        "SELECT id, title, content, kind, links, created_at, updated_at \
+pub async fn find_full_by_id(
+    pool: &SqlitePool,
+    id: &str,
+) -> sqlx::Result<Option<SessionDocFullRow>> {
+    sqlx::query_as::<_, SessionDocFullRow>(
+        "SELECT id, title, content, kind, links FROM session_documents WHERE id = ?",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+}
+
+pub async fn find_linked(
+    pool: &SqlitePool,
+    links_json: &str,
+) -> sqlx::Result<Vec<SessionDocFullRow>> {
+    sqlx::query_as::<_, SessionDocFullRow>(
+        "SELECT id, title, content, kind, links \
          FROM session_documents \
          WHERE id IN (SELECT value FROM json_each(?))",
     )
@@ -80,7 +107,7 @@ pub async fn write_content(
          SET content = ?, \
              title = COALESCE(?, title), \
              links = COALESCE(?, links), \
-             updated_at = STRFTIME('%Y-%m-%dT%H:%M:%fZ', 'now') \
+             updated_at = CURRENT_TIMESTAMP \
          WHERE id = ?",
     )
     .bind(content)
