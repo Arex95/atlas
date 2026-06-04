@@ -127,6 +127,14 @@ pub struct ProjectMcpRow {
     pub root_path: String,
 }
 
+pub async fn find_slug_by_id(pool: &SqlitePool, id: &str) -> sqlx::Result<Option<String>> {
+    let row: Option<(String,)> = sqlx::query_as("SELECT slug FROM projects WHERE id = ?")
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
+    Ok(row.map(|(slug,)| slug))
+}
+
 pub async fn resolve_id(pool: &SqlitePool, project_id_or_slug: &str) -> sqlx::Result<String> {
     let row: Option<(String,)> = sqlx::query_as(
         "SELECT id FROM projects WHERE id = ? OR slug = ? LIMIT 1",

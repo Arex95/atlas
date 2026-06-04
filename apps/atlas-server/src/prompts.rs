@@ -38,6 +38,12 @@ for session-scoped operations.
 ## SKILLS
 A \"skill\" is a saved shell script stored in Atlas that an agent can execute in any \
 session. Use list_skills to see available scripts and run_skill to execute one.
+
+## GRAPH DOCUMENTATION
+Documents can link to each other (Obsidian-style). Use get_document_links { id } to \
+fetch a document and all its directly linked documents in one call. Start from the \
+project index document and follow only the links relevant to your task — you do not \
+need to read the entire documentation set.
 ";
 
 pub const ORCHESTRATION_MANUAL: &str = "\
@@ -133,6 +139,37 @@ for session-scoped tools. mcp-remote does not forward HTTP headers.
 - global_list_memory — developer-curated global key-value context
 - global_list_skills — global skills available to all agents
 - global_list_prompts — global prompt templates
+
+### Session Pool (sliding window)
+- spawn_session { title?, provider?, model?, workingDirectory? } — create a new worker session
+- close_session { sessionId } — kill PTY + delete session when the worker is done
+
+### Graph Documentation
+- get_document_links { id } — fetch a document and all its linked documents (1-hop)
+
+## SESSION POOL PATTERN
+To process a large plan with at most N parallel workers:
+
+1. Break the plan into tasks with create_task { scope:\"project\", ... } for each subtask.
+2. Loop: while pending tasks remain —
+   a. active = list_sessions (excluding yourself)
+   b. if len(active) < N: spawn_session + send_message with the next task
+   c. wait for a worker to reply (read_inbox) before spawning the next one
+3. Each worker: read_inbox → do work → update_task { status:\"done\" } → send_message \
+   back to orchestrator → close_session (close itself via the orchestrator, or the \
+   orchestrator closes it after receiving the done signal).
+
+## GRAPH DOCUMENTATION PATTERN
+Maintain a project index document (kind=\"index\", scope=\"project\") that links to \
+top-level section documents. Each section document links to sub-documents.
+When a new session starts it only needs to:
+  1. list_documents { scope:\"project\", type:\"index\" } → get the index id
+  2. get_document_links { id: <index_id> } → get the index + top-level sections in one call
+  3. get_document_links { id: <relevant_section_id> } → drill into the section needed
+This avoids loading the entire documentation set every session.
+To link documents when creating or updating:
+  create_document { ..., links: [\"id1\", \"id2\"] }
+  write_document  { id, content, links: [\"id1\", \"id2\"] }
 ";
 
 pub const ORCHESTRATION_PROMPT_FOR_AGENTS: &str = "\

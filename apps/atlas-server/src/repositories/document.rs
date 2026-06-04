@@ -114,10 +114,22 @@ pub async fn find_for_mcp(
 
 pub async fn find_full_by_id(pool: &SqlitePool, id: &str) -> sqlx::Result<Option<DocFullRow>> {
     sqlx::query_as::<_, DocFullRow>(
-        "SELECT id, title, content, kind FROM project_documents WHERE id = ?",
+        "SELECT id, title, content, kind, links FROM project_documents WHERE id = ?",
     )
     .bind(id)
     .fetch_optional(pool)
+    .await
+}
+
+/// Returns all documents whose IDs appear in the given JSON array string, e.g. '["id1","id2"]'.
+pub async fn find_linked(pool: &SqlitePool, links_json: &str) -> sqlx::Result<Vec<DocFullRow>> {
+    sqlx::query_as::<_, DocFullRow>(
+        "SELECT id, title, content, kind, links \
+         FROM project_documents \
+         WHERE id IN (SELECT value FROM json_each(?))",
+    )
+    .bind(links_json)
+    .fetch_all(pool)
     .await
 }
 
@@ -126,25 +138,22 @@ pub async fn write_content(
     id: &str,
     content: &str,
     title: Option<&str>,
+    links: Option<&str>,
 ) -> sqlx::Result<bool> {
-    let res = if let Some(t) = title {
-        sqlx::query(
-            "UPDATE project_documents SET content = ?, title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        )
-        .bind(content)
-        .bind(t)
-        .bind(id)
-        .execute(pool)
-        .await?
-    } else {
-        sqlx::query(
-            "UPDATE project_documents SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        )
-        .bind(content)
-        .bind(id)
-        .execute(pool)
-        .await?
-    };
+    let res = sqlx::query(
+        "UPDATE project_documents \
+         SET content = ?, \
+             title = COALESCE(?, title), \
+             links = COALESCE(?, links), \
+             updated_at = CURRENT_TIMESTAMP \
+         WHERE id = ?",
+    )
+    .bind(content)
+    .bind(title)
+    .bind(links)
+    .bind(id)
+    .execute(pool)
+    .await?;
     Ok(res.rows_affected() > 0)
 }
 
@@ -155,15 +164,18 @@ pub async fn create_simple(
     title: &str,
     content: &str,
     kind: &str,
+    links: &str,
 ) -> sqlx::Result<bool> {
     let res = sqlx::query(
-        "INSERT INTO project_documents (id, project_id, title, content, kind, tags) VALUES (?, ?, ?, ?, ?, '[]')",
+        "INSERT INTO project_documents (id, project_id, title, content, kind, tags, links) \
+         VALUES (?, ?, ?, ?, ?, '[]', ?)",
     )
     .bind(id)
     .bind(project_id)
     .bind(title)
     .bind(content)
     .bind(kind)
+    .bind(links)
     .execute(pool)
     .await?;
     Ok(res.rows_affected() > 0)
@@ -183,4 +195,5 @@ pub struct DocFullRow {
     pub title: String,
     pub content: String,
     pub kind: String,
+    pub links: String,
 }
