@@ -1,0 +1,37 @@
+[package]
+name = "atlas-server"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "atlas-server"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+atlas-afg = { path = "../../features/afg" }
+atlas-auth = { path = "../../features/auth" }
+atlas-mcp = { path = "../../features/mcp" }
+atlas-graph = { path = "../../features/graph" }
+atlas-memory = { path = "../../features/memory" }
+atlas-messaging = { path = "../../features/messaging" }
+atlas-notes = { path = "../../features/notes" }
+atlas-sessions = { path = "../../features/sessions" }
+atlas-sync = { path = "../../features/sync" }
+atlas-terminal = { path = "../../features/terminal" }
+atlas-tracker = { path = "../../features/tracker" }
+axum = { version = "0.8", default-features = false, features = ["json", "http1", "tokio"] }
+serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio"] }
+thiserror = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tower-http = { version = "0.6", default-features = false, features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = "2"

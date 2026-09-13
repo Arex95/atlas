@@ -1,0 +1,56 @@
+# Builds the VitePress site and publishes it to GitHub Pages.
+#
+# Only on a change under docs/ — a code-only commit has no reason to
+# redeploy a site that did not change.
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Not cancel-in-progress: a half-finished deployment is worse than a
+# superseded one, and these runs are minutes apart at most.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: pnpm -C docs install --frozen-lockfile
+      - name: Build
+        # Pages serves this from /atlas/, matching the repository name.
+        # Set it to '/' the day a custom domain serves the site from the
+        # root, or every asset resolves to a 404.
+        run: pnpm -C docs build
+        env:
+          DOCS_BASE: /atlas/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

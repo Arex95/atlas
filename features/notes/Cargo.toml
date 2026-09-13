@@ -1,0 +1,22 @@
+[package]
+name = "atlas-notes"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio", "macros", "chrono", "migrate"] }
+thiserror = "2"
+ulid = "1"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

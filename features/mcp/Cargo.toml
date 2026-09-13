@@ -1,0 +1,47 @@
+[package]
+name = "atlas-mcp"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+atlas-afg = { path = "../afg" }
+atlas-graph = { path = "../graph" }
+atlas-memory = { path = "../memory" }
+atlas-notes = { path = "../notes" }
+atlas-messaging = { path = "../messaging" }
+atlas-sessions = { path = "../sessions" }
+atlas-sync = { path = "../sync" }
+atlas-terminal = { path = "../terminal" }
+atlas-tracker = { path = "../tracker" }
+axum = { version = "0.8", default-features = false, features = ["json", "http1", "tokio"] }
+chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+subtle = "2"
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "macros"] }
+tower = "0.5"
+tracing = "0.1"
+
+[dev-dependencies]
+atlas-afg = { path = "../afg" }
+atlas-auth = { path = "../auth" }
+atlas-graph = { path = "../graph" }
+atlas-memory = { path = "../memory" }
+atlas-notes = { path = "../notes" }
+atlas-messaging = { path = "../messaging" }
+atlas-sessions = { path = "../sessions" }
+atlas-terminal = { path = "../terminal" }
+atlas-tracker = { path = "../tracker", features = ["test-support"] }
+tempfile = "3"
+axum = { version = "0.8", default-features = false, features = ["json", "http1", "tokio"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"

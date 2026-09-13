@@ -1,0 +1,51 @@
+# What NOT to send to the Docker daemon as build context.
+#
+# Without this file the context is the whole working tree — which here is
+# tens of gigabytes, because `target/` is. Two consequences, one of which
+# took down a pipeline:
+#
+#   * CI caches `target/` between jobs (see .gitlab-ci.yml). The image job
+#     therefore starts with a populated target/, `COPY . .` writes it over
+#     the one the build stage just produced, and the runner fills its disk.
+#   * Locally, `just image` uploads the same tens of gigabytes to the daemon
+#     before the build even starts.
+#
+# The build stage needs the workspace manifests and the sources. Nothing
+# else here is read by any stage.
+
+# Rust build output — regenerated inside the image, and the largest thing
+# in the tree by orders of magnitude.
+target/
+.cargo/
+
+# Version control.
+.git/
+.gitignore
+.gitattributes
+
+# The documentation site: not compiled into the binary, and node_modules is
+# large enough to matter on its own.
+docs/
+
+# CI and tooling config, read by the runner rather than by the build.
+.gitlab-ci.yml
+.github/
+justfile
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Local environment. `.env` is gitignored, but a developer who has one must
+# not have it baked into an image.
+.env
+.env.*
+
+# Local data if the binary was run from the repo root.
+atlas-data/
+
+# Editor and OS scratch.
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*~

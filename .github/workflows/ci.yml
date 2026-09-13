@@ -1,52 +1,90 @@
+# Every gate a change must clear before it reaches main.
+#
+# The same commands are a `just` recipe, so a red run reproduces locally
+# with one command: `just check`. A gate that only exists in CI is a gate
+# people learn to push against and wait.
 name: CI
 
 on:
   push:
-    branches: [main, master, audit/**]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
+# A second push to the same branch cancels the first. The answer for the
+# superseded commit is not worth the minutes.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Every job starts from a restored cache and compiles once, so
+  # incremental artifacts are written, cached, and never reused.
+  CARGO_INCREMENTAL: "0"
+  # Debug info is a large share of both compile time and cache size, and
+  # nothing here opens a debugger. Backtraces keep their frames.
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_PROFILE_TEST_DEBUG: "0"
+  CARGO_NET_RETRY: "3"
+  CARGO_TERM_COLOR: always
+
 jobs:
-  rust:
-    name: Rust (atlas-server, atlas-cli)
+  # One job, in the order the gates fail fastest. They all need the same
+  # compilation; splitting them would pay for it several times over to buy
+  # per-gate red/green granularity that the ordering already approximates.
+  gate:
+    name: Gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+      # Pinned to the MSRV declared in Cargo.toml, not to the newest
+      # toolchain. A newer clippy ships a *softer* lint set than 1.88 in
+      # places, so building on latest would let through what CI's real
+      # floor rejects.
+      - name: Install Rust 1.88
+        run: |
+          rustup toolchain install 1.88 --profile minimal --component rustfmt,clippy
+          rustup default 1.88
+          cargo fmt --version
+          cargo clippy --version
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: cargo fmt --check
-        run: cargo fmt --all -- --check
+      # Seconds, no compilation — a formatting slip never waits for a build.
+      - name: Formatting
+        run: cargo fmt --all --check
 
-      - name: cargo check
-        run: cargo check --workspace --all-targets
+      # Also seconds, and it catches the failure that has recurred most:
+      # a crate missing from one of the Dockerfile's lists.
+      - name: Dockerfile crate lists
+        run: bash scripts/check-dockerfile-crates.sh
 
-      - name: cargo clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Lints
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
-  web:
-    name: Web (Vue 3 + Vite)
+      # Neither clippy nor the tests resolve an intra-doc link, which is how
+      # a reference to a method renamed months ago survived.
+      - name: Documentation
+        run: cargo doc --no-deps --workspace
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Tests
+        run: cargo test --workspace --all-features --locked
+
+  # Built, not pushed. Nothing is deployed from this repository, so the
+  # value here is catching a Dockerfile that stopped working at the change
+  # that broke it rather than on the day of a first deployment.
+  image:
+    name: Container image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
         with:
-          version: 10
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Type-check (vue-tsc)
-        run: pnpm --filter web exec vue-tsc --noEmit
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

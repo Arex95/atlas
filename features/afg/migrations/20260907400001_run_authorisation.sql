@@ -1,0 +1,23 @@
+-- Who a run belongs to, and where its gates may run.
+--
+-- `afg.submit_task_result` used to take `run_id`, `node_id` and
+-- `project_root` from its caller and check none of them against
+-- anything. Any credential could therefore complete any run, and the
+-- `project_root` it named became the working directory of the shell
+-- the run's acceptance gates execute in. Verified against a real
+-- container: an unrelated session completed another's run and chose
+-- the directory `bash` ran in.
+--
+-- Two columns close it, and both work by removing a choice rather than
+-- by adding a check the next tool has to remember to make.
+--
+-- `workflows.project_root` is recorded once, when the workflow is
+-- registered, and used for every gate afterwards. The caller no longer
+-- names a directory at the moment it matters.
+--
+-- `workflow_runs.target_session_id` is the session the current node
+-- was dispatched to. A result is accepted only from that session.
+-- Nullable because it is unset until the first node is dispatched, and
+-- an unset target must not silently mean "anyone".
+ALTER TABLE workflows ADD COLUMN project_root TEXT;
+ALTER TABLE workflow_runs ADD COLUMN target_session_id TEXT;
