@@ -73,7 +73,12 @@ async fn full_run_advances_through_two_nodes_and_completes() {
     let project_root = dir.path().to_str().unwrap();
 
     let workflow = runtime
-        .register_workflow("your-org/your-project", project_root, None, Some(TWO_NODE_YAML))
+        .register_workflow(
+            "your-org/your-project",
+            project_root,
+            None,
+            Some(TWO_NODE_YAML),
+        )
         .await
         .unwrap();
 
@@ -300,7 +305,12 @@ async fn a_result_from_a_session_the_node_was_not_sent_to_is_refused() {
     let project_root = dir.path().to_str().unwrap();
 
     let workflow = runtime
-        .register_workflow("your-org/your-project", project_root, None, Some(TWO_NODE_YAML))
+        .register_workflow(
+            "your-org/your-project",
+            project_root,
+            None,
+            Some(TWO_NODE_YAML),
+        )
         .await
         .unwrap();
     let run = runtime
@@ -343,7 +353,12 @@ async fn a_caller_with_no_session_cannot_submit_at_all() {
     let project_root = dir.path().to_str().unwrap();
 
     let workflow = runtime
-        .register_workflow("your-org/your-project", project_root, None, Some(TWO_NODE_YAML))
+        .register_workflow(
+            "your-org/your-project",
+            project_root,
+            None,
+            Some(TWO_NODE_YAML),
+        )
         .await
         .unwrap();
     let run = runtime
@@ -591,7 +606,12 @@ async fn a_result_for_a_node_that_was_not_dispatched_is_refused() {
     let project_root = dir.path().to_str().unwrap();
 
     let workflow = runtime
-        .register_workflow("your-org/your-project", project_root, None, Some(TWO_NODE_YAML))
+        .register_workflow(
+            "your-org/your-project",
+            project_root,
+            None,
+            Some(TWO_NODE_YAML),
+        )
         .await
         .unwrap();
     let run = runtime

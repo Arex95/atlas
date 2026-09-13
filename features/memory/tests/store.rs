@@ -15,7 +15,11 @@ async fn fresh() -> (MemoryStore, SqlitePool) {
 async fn project_memory_round_trips() {
     let (store, _) = fresh().await;
     let written = store
-        .remember_project("your-org/your-project", "build-command", &json!("cargo build"))
+        .remember_project(
+            "your-org/your-project",
+            "build-command",
+            &json!("cargo build"),
+        )
         .await
         .unwrap();
     assert_eq!(written.scope, MemoryScope::Project);
@@ -141,7 +145,11 @@ async fn the_two_buckets_do_not_bleed_into_each_other_on_a_shared_key() {
         json!("personal value")
     );
     assert_eq!(
-        store.list_project("your-org/your-project").await.unwrap().len(),
+        store
+            .list_project("your-org/your-project")
+            .await
+            .unwrap()
+            .len(),
         1
     );
     assert_eq!(store.list_personal("owner-1").await.unwrap().len(), 1);

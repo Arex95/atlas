@@ -131,7 +131,12 @@ nodes:
 
 async fn register_workflow(runtime: &AfgRuntime, project_root: &str) -> WorkflowId {
     runtime
-        .register_workflow("your-org/your-project", project_root, None, Some(TWO_NODE_YAML))
+        .register_workflow(
+            "your-org/your-project",
+            project_root,
+            None,
+            Some(TWO_NODE_YAML),
+        )
         .await
         .unwrap()
         .id

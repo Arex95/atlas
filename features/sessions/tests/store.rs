@@ -76,13 +76,21 @@ async fn list_filters_by_project_and_status() {
         .unwrap();
 
     let active = store
-        .list("your-org/your-project", "owner-a", Some(SessionStatus::Active))
+        .list(
+            "your-org/your-project",
+            "owner-a",
+            Some(SessionStatus::Active),
+        )
         .await
         .unwrap();
     assert_eq!(active.len(), 0);
 
     let archived = store
-        .list("your-org/your-project", "owner-a", Some(SessionStatus::Archived))
+        .list(
+            "your-org/your-project",
+            "owner-a",
+            Some(SessionStatus::Archived),
+        )
         .await
         .unwrap();
     assert_eq!(archived.len(), 1);
