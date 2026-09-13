@@ -1,6 +1,0 @@
-[workspace]
-members = [
-    "apps/atlas-cli",
-    "apps/atlas-server",
-]
-resolver = "2"
