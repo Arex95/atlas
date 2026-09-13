@@ -126,16 +126,27 @@ h1, h2, h3, .VPHero .name, .VPHero .text {
  * four sentences, and a four-across grid gives each about thirty characters
  * per line — a column so narrow it breaks sentences mid-thought.
  *
- * Full width alone would be worse, not better: a 1500px paragraph runs to
- * ~180 characters a line and the eye loses the return sweep. So the card is
- * horizontal *inside* — the title holds a fixed left column, the prose sits
- * in a measure capped near 70 characters, which is where reading speed
- * peaks. Wide card, narrow text.
+ * The card is horizontal inside: title in a left column, prose in the rest.
+ *
+ * Two things this must not do, both learned by doing them:
+ *
+ *   1. Stretch the card to the viewport while capping the text at 64ch. A
+ *      third of the row ends up empty with the title floating alone in it,
+ *      and it reads as a layout bug rather than a choice.
+ *
+ *   2. Cap the container to fix that. The features then sit narrower than
+ *      the hero above them and the page loses its left edge — worse, because
+ *      the misalignment is visible without scrolling.
+ *
+ * So the container is left alone: it inherits the same width as the hero and
+ * every card lines up with it. The measure is controlled *inside* the card
+ * instead, by giving the title column a real share of the row. A wide label
+ * column next to a rule reads as deliberate; slack against the right margin
+ * does not.
  *
  * The grid goes on `.box`, not on `.VPFeature`. VitePress nests an
- * `<article class="box">` inside the feature link, so a grid on the
- * outer element lays out a single child and changes nothing — which is
- * exactly what the first version of this did.
+ * `<article class="box">` inside the feature link, so a grid on the outer
+ * element lays out a single child and changes nothing.
  */
 .VPFeatures .items {
     flex-direction: column;
@@ -143,7 +154,7 @@ h1, h2, h3, .VPHero .name, .VPHero .text {
 
 .VPFeatures .item {
     width: 100% !important;
-    padding: 0 0 1.25rem !important;
+    padding: 0 0 1rem !important;
 }
 
 .VPFeatures .item:last-child {
@@ -153,30 +164,38 @@ h1, h2, h3, .VPHero .name, .VPHero .text {
 @media (min-width: 860px) {
     .VPFeatures .VPFeature .box {
         display: grid;
-        grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
-        gap: 2.5rem;
+        grid-template-columns: minmax(15rem, 26rem) minmax(0, 1fr);
+        gap: 0;
         align-items: start;
         padding: 1.75rem 2rem;
     }
 
-    /* The title stops being a heading over a block and becomes the label
-     * of the row, so it is allowed to sit on its own line length. */
+    /* The title stops being a heading over a block and becomes the label of
+     * the row. The rule between the columns is what keeps the distance from
+     * reading as emptiness: deliberate, rather than left over. */
     .VPFeatures .VPFeature .box .title {
-        font-size: 1.15rem;
-        line-height: 1.3;
+        font-size: 1.1rem;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
         margin: 0;
+        padding-right: 2rem;
     }
 
+    /* A size up from the VitePress default. At this column width 14px runs to
+     * roughly a hundred characters a line, which is where the eye starts
+     * losing the return sweep; 16px brings it back near eighty. */
     .VPFeatures .VPFeature .box .details {
         margin: 0;
-        max-width: 64ch;
-        line-height: 1.7;
+        padding-left: 2rem;
+        border-left: 1px solid var(--vp-c-divider);
+        font-size: 1rem;
+        line-height: 1.75;
     }
 }
 
 /* A hairline on the left edge ties the row to the accent without filling a
  * large surface with it: the orange fails contrast as a background for text,
- * and a 1500px block of it would shout over the page it introduces. */
+ * and a wide block of it would shout over the page it introduces. */
 .VPFeatures .VPFeature {
     border-left: 2px solid transparent;
     transition: border-color 0.2s ease;
