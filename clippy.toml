@@ -1,0 +1,7 @@
+# Clippy configuration. Lint levels are set in Cargo.toml [workspace.lints]
+# so they apply uniformly to every crate in the workspace.
+#
+# Keep this file lean — a project-wide clippy exception needs a reason,
+# not as a silent override here.
+
+msrv = "1.88"

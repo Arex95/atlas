@@ -1,0 +1,135 @@
+# How this repository is subdivided, and what its layers may depend on.
+#
+# Read by Atlas's own Project Map. Optional: deleting this file loses
+# the layer findings and nothing else.
+#
+# The layering is the one every feature crate follows — domain knows
+# nothing, and everything else may know the domain.
+#
+# It describes what this repository *is*, not what it aspires to.
+# The first draft of this file declared that application may not
+# import infrastructure, which produced 22 violations: the routers use
+# their crate's store directly, because a port was built only where one
+# earned its keep (`Extractor`, `IssueTracker`) rather than everywhere.
+# A declaration stating an aspiration turns every finding into noise
+# and teaches whoever reads it to ignore the rest.
+#
+# The dependency runs one way:
+#
+#   application -> infrastructure -> domain
+#
+# WHY api.rs AND bin/** ARE NOT LAYERED, which looks like an omission
+# and is not. A layer here is a rank over file paths, and this
+# repository has two different relations that a single rank cannot
+# hold at once:
+#
+#   1. inside a crate   api.rs re-exports from internal/, so api
+#                       depends on application
+#   2. between crates   one crate's application imports another
+#                       crate's api, so application depends on api
+#
+# Ranking `api.rs` above application satisfies (1) and reports all of
+# (2) as violations — measured: 61 of them, every one a crate legally
+# importing another crate's public surface. Ranking it below inverts
+# the problem. The two relations are genuinely different edges and
+# belong in different checks.
+#
+# The cross-crate boundary is already enforced, and enforced harder
+# than a finding could: `internal/` is private, so importing it from
+# another crate does not produce a warning, it fails to compile. A
+# layer rule on top of the compiler would add nothing but noise.
+#
+# So `layer_check_incomplete` reporting ~64 uncovered files is accurate
+# and expected: those are api.rs, lib.rs, contract.rs and the two
+# binaries, each governed by rustc instead. Read the notice as "the
+# layer check is about the inside of a crate", not as a hole.
+#
+# The full standard is in features/README.md.
+
+[[module]]
+name = "auth"
+path = "features/auth"
+description = "identity, sessions, GitLab OAuth linking, disablement"
+
+[[module]]
+name = "graph"
+path = "features/graph"
+description = "Project Map: indexing, search, findings, layers"
+
+[[module]]
+name = "mcp"
+path = "features/mcp"
+description = "the JSON-RPC surface agents talk to"
+
+[[module]]
+name = "sync"
+path = "features/sync"
+description = "focus / auto / live replication between instances"
+
+[[module]]
+name = "afg"
+path = "features/afg"
+description = "agent workflow runs"
+
+[[module]]
+name = "memory"
+path = "features/memory"
+description = "agent memory, project and personal buckets"
+
+[[module]]
+name = "messaging"
+path = "features/messaging"
+description = "the inter-session coordination bus"
+
+[[module]]
+name = "notes"
+path = "features/notes"
+description = "a developer's own notes, personal by construction"
+
+[[module]]
+name = "sessions"
+path = "features/sessions"
+description = "the session registry and its ownership rules"
+
+[[module]]
+name = "terminal"
+path = "features/terminal"
+description = "the PTY pool, and restoring a missing workspace"
+
+[[module]]
+name = "tracker"
+path = "features/tracker"
+description = "the external-tracker port, its adapters and local mirror"
+
+[[module]]
+name = "server"
+path = "bin/atlas-server"
+description = "the binary that wires every crate together"
+
+[[module]]
+name = "cli"
+path = "bin/atlas"
+description = "the terminal client"
+
+# Types and errors. Depends on nothing: the moment the domain imports
+# infrastructure, the infrastructure can no longer be replaced.
+[[layer]]
+name = "domain"
+paths = ["features/*/src/internal/domain/**"]
+
+# Use cases and HTTP routers. May use its crate's store directly:
+# see the note above on ports.
+[[layer]]
+name = "application"
+paths = ["features/*/src/internal/application/**"]
+depends_on = ["domain", "infrastructure"]
+
+# Adapters: SQL, PTYs, filesystems, HTTP clients. Depends only on the
+# domain — an adapter implements the domain's types, it does not reach
+# up into use cases. The two imports that once ran the other way were a
+# data type and a router, both simply in the wrong folder.
+[[layer]]
+name = "infrastructure"
+paths = ["features/*/src/internal/infrastructure/**"]
+depends_on = ["domain"]
+
