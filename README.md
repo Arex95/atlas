@@ -138,6 +138,13 @@ in CI instead of on your machine.
    evidence — commands run and output seen, not "tested locally".
 7. Verify against something running, not only against tests.
 
+**By opening a pull request you agree that your contribution may be
+released under the licence above and under a commercial licence.**
+Without that, a single merged patch would make it impossible to license
+the project to a company later without tracking down its author. If you
+would rather not, say so in the pull request and it can be discussed —
+better before the work than after.
+
 **Documentation ships in the same commit as the change.** A new
 endpoint updates the HTTP reference, a new tool updates the MCP
 reference, a new variable updates both the environment reference and
@@ -160,4 +167,17 @@ vulnerability. Read it before exposing a deployment.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+**[PolyForm Noncommercial 1.0.0](./LICENSE)** — free for any
+noncommercial purpose: your own machine, research, teaching, a
+nonprofit. Read, fork, modify, and run it; the whole source is here.
+
+**Commercial use needs a separate licence.** Using Atlas in or for a
+business, or offering it to anyone else as a product or a service, is
+not covered by the licence above. If that is what you want, open an
+issue titled `commercial licence` and we will sort it out — the answer
+is yes, it just needs its own terms.
+
+This is source-available, not open source: a licence that forbids
+commercial use cannot be OSI-approved, and saying otherwise would be
+misleading. Everything else about the project is unchanged — the code,
+the history and the reasoning are all public.

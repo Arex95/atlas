@@ -19,9 +19,13 @@ members = [
 [workspace.package]
 edition = "2024"
 rust-version = "1.88"
-license = "MIT"
+license = "PolyForm-Noncommercial-1.0.0"
 repository = "https://github.com/Arex95/atlas"
 authors = ["Arex95", "Claude"]
+# crates.io requires an OSI-approved license, which this deliberately is
+# not. Stated here so an accidental `cargo publish` fails at the check
+# rather than at the registry.
+publish = false
 
 # Zero-warning policy: every clippy lint that surfaces a mistake is denied
 # workspace-wide. A crate that needs to opt out states the reason in code
