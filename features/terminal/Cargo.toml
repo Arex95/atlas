@@ -1,0 +1,21 @@
+[package]
+name = "atlas-terminal"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+atlas-sessions = { path = "../sessions" }
+portable-pty = "0.8"
+thiserror = "2"
+tokio = { version = "1", features = ["sync", "rt", "macros", "process"] }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
