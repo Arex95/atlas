@@ -1,0 +1,37 @@
+[package]
+name = "atlas-sync"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+atlas-auth = { path = "../auth" }
+atlas-memory = { path = "../memory" }
+atlas-notes = { path = "../notes" }
+atlas-sessions = { path = "../sessions" }
+axum = { version = "0.8", default-features = false, features = ["json", "http1", "tokio", "query"] }
+chrono = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["rt", "sync", "time"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+tracing = "0.1"
+url = "2"
+
+[dev-dependencies]
+atlas-memory = { path = "../memory" }
+atlas-notes = { path = "../notes" }
+http-body-util = "0.1"
+sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
+tower = { version = "0.5", features = ["util"] }
+urlencoding = "2"
