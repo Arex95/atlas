@@ -1,0 +1,15 @@
+-- What to run when this session's terminal comes back.
+--
+-- Atlas does not persist terminal scrollback. Replaying a buffer would
+-- give a human something to read and give the agent nothing: the model
+-- has no memory of a conversation just because its transcript is on
+-- screen. The agent CLIs already solve this for themselves — `claude
+-- --resume`, and the equivalent elsewhere — so the session records the
+-- command that asks them to, and spawning a terminal runs it.
+--
+-- It grants no capability its owner did not already have: the command
+-- runs as them, in their own working tree, and they could have typed
+-- it through `terminal.write`. What it adds is *persistence* — a
+-- command that runs later, unattended — which is why only the session's
+-- owner can set it and why it is shown in full wherever the session is.
+ALTER TABLE sessions ADD COLUMN resume_command TEXT;
