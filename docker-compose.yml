@@ -1,0 +1,31 @@
+# Local smoke test of the image: `just up` builds from the Dockerfile in
+# this repo and runs it with a persistent volume for the data directory.
+#
+# Configuration is read from a .env file beside this one — copy
+# .env.example and edit it. Nothing is baked into the image, so the same
+# image runs here and in a real deployment with different values.
+
+services:
+  atlas-server:
+    build:
+      context: .
+    image: atlas-server:local
+    container_name: atlas-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      # Inside the container, bind every interface: the port is published
+      # deliberately below, and binding loopback here would make it
+      # unreachable from the host.
+      ATLAS_LISTEN_ADDR: 0.0.0.0:4000
+      # Lives on the volume mounted below, so it survives a rebuild.
+      ATLAS_DB_PATH: /var/lib/atlas/atlas.db
+    ports:
+      - "${ATLAS_HOST_PORT:-4000}:4000"
+    volumes:
+      - atlas-data:/var/lib/atlas
+
+volumes:
+  atlas-data:
