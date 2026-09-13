@@ -1,0 +1,29 @@
+[package]
+name = "atlas-cli"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "atlas"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+# No dependency on the feature crates. The CLI is a client of the HTTP
+# surface, exactly like an agent is — so anything it can do, an agent
+# can do, and a change that breaks agents breaks this too rather than
+# being papered over by a shared type.
+clap = { version = "4", features = ["derive", "env"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
