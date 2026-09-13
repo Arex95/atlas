@@ -43,7 +43,7 @@ fn sample_issue(id: &str, title: &str, updated_offset_secs: i64) -> Issue {
 }
 
 fn project() -> ProjectRef {
-    ProjectRef::new("your-org", "atlas").unwrap()
+    ProjectRef::new("your-org", "your-project").unwrap()
 }
 
 #[tokio::test]

@@ -41,7 +41,7 @@ else is unaffected.
 { "project": "your-org/your-project", "id": "142" }
 ```
 
-`project` accepts nested subgroups — `acme/solutions/atlas/server`
+`project` accepts nested subgroups — `acme/platform/tools/widgets`
 resolves correctly, not just `group/project`.
 
 ## The mirror

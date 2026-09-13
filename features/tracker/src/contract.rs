@@ -42,7 +42,7 @@ impl ContractFixture {
     pub fn sample() -> Self {
         let created = Utc.with_ymd_and_hms(2026, 8, 20, 10, 0, 0).unwrap();
         let updated = Utc.with_ymd_and_hms(2026, 8, 20, 12, 0, 0).unwrap();
-        let project = ProjectRef::new("your-org", "atlas").unwrap();
+        let project = ProjectRef::new("your-org", "your-project").unwrap();
         let open_issue = Issue {
             id: IssueId("1".to_owned()),
             title: "add tracker port".to_owned(),

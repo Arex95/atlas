@@ -30,7 +30,7 @@ const ISSUE_EVENT: &str = r#"{
 }"#;
 
 fn project() -> ProjectRef {
-    ProjectRef::new("your-org", "atlas").unwrap()
+    ProjectRef::new("your-org", "your-project").unwrap()
 }
 
 fn upstream_issue() -> Issue {

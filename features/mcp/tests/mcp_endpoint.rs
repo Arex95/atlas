@@ -24,7 +24,7 @@ const TOKEN: &str = "test-token";
 
 fn seeded_runtime() -> TrackerRuntime {
     let fake = FakeTracker::new();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
     let created = Utc.with_ymd_and_hms(2026, 8, 20, 10, 0, 0).unwrap();
     let updated = Utc.with_ymd_and_hms(2026, 8, 20, 12, 0, 0).unwrap();
     fake.insert(

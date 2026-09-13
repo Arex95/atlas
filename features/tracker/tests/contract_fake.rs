@@ -26,7 +26,7 @@ async fn fake_satisfies_write_contract() {
     run_write_contract(|| async {
         (
             FakeTracker::new(),
-            ProjectRef::new("your-org", "atlas").unwrap(),
+            ProjectRef::new("your-org", "your-project").unwrap(),
         )
     })
     .await;
@@ -35,7 +35,7 @@ async fn fake_satisfies_write_contract() {
 #[tokio::test]
 async fn fake_rejects_an_empty_title() {
     let fake = FakeTracker::new();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
     let err = fake
         .create_issue(
             &project,

@@ -70,7 +70,7 @@ async fn mirror_satisfies_write_contract() {
     let store = MirrorStore::new(pool);
     let store_check = store.clone();
     let upstream = Arc::new(FakeTracker::new());
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
 
     run_write_contract(|| async { (MirroredTracker::new(store, upstream), project.clone()) }).await;
 

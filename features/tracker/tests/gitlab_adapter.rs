@@ -39,7 +39,7 @@ fn closed_issue_json() -> serde_json::Value {
     })
 }
 
-const PROJECT_PATH: &str = "acme%2Fwidgets";
+const PROJECT_PATH: &str = "your-org%2Fyour-project";
 
 async fn seeded_server() -> MockServer {
     let server = MockServer::start().await;
@@ -102,7 +102,7 @@ async fn gitlab_adapter_contract() {
     let base = Url::parse(&server.uri()).unwrap();
     let tracker =
         GitLabTracker::new(base, "pat-xyz".to_owned(), "atlas-tests/0".to_owned()).unwrap();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
     let updated = Utc.with_ymd_and_hms(2026, 8, 20, 12, 0, 0).unwrap();
 
     let all = tracker
@@ -196,7 +196,10 @@ async fn gitlab_adapter_satisfies_write_contract() {
     run_write_contract(|| async {
         let tracker =
             GitLabTracker::new(base, "pat-xyz".to_owned(), "atlas-tests/0".to_owned()).unwrap();
-        (tracker, ProjectRef::new("your-org", "atlas").unwrap())
+        (
+            tracker,
+            ProjectRef::new("your-org", "your-project").unwrap(),
+        )
     })
     .await;
 }
@@ -211,7 +214,7 @@ async fn create_issue_rejection_maps_to_invalid() {
     let base = Url::parse(&server.uri()).unwrap();
     let tracker =
         GitLabTracker::new(base, "pat-xyz".to_owned(), "atlas-tests/0".to_owned()).unwrap();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
 
     let err = tracker
         .create_issue(
@@ -237,7 +240,7 @@ async fn update_status_conflict_maps_to_conflict() {
     let base = Url::parse(&server.uri()).unwrap();
     let tracker =
         GitLabTracker::new(base, "pat-xyz".to_owned(), "atlas-tests/0".to_owned()).unwrap();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
 
     let err = tracker
         .update_status(&project, &IssueId("1".to_owned()), IssueStatus::Closed)
@@ -255,7 +258,7 @@ async fn unauthorized_maps_to_domain_error() {
         .await;
     let base = Url::parse(&server.uri()).unwrap();
     let tracker = GitLabTracker::new(base, "bad".to_owned(), "atlas-tests/0".to_owned()).unwrap();
-    let project = ProjectRef::new("your-org", "atlas").unwrap();
+    let project = ProjectRef::new("your-org", "your-project").unwrap();
     let err = tracker
         .list_issues(&project, &IssueFilter::default())
         .await

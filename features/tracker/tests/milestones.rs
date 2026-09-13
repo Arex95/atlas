@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tempfile::TempDir;
 
 fn project() -> ProjectRef {
-    ProjectRef::new("your-org", "atlas").unwrap()
+    ProjectRef::new("your-org", "your-project").unwrap()
 }
 
 /// An issue with two of three acceptance criteria ticked, in

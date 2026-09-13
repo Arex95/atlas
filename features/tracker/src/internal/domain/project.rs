@@ -93,8 +93,8 @@ mod tests {
     #[test]
     fn parses_owner_repo() {
         let p: ProjectRef = "your-org/your-project".parse().unwrap();
-        assert_eq!(p.owner(), "acme");
-        assert_eq!(p.repo(), "atlas");
+        assert_eq!(p.owner(), "your-org");
+        assert_eq!(p.repo(), "your-project");
         assert_eq!(p.path(), "your-org/your-project");
     }
 
@@ -107,7 +107,7 @@ mod tests {
     fn parses_nested_subgroup() {
         let p: ProjectRef = "acme/sandbox/widgets".parse().unwrap();
         assert_eq!(p.owner(), "acme/sandbox");
-        assert_eq!(p.repo(), "atlas-test");
+        assert_eq!(p.repo(), "widgets");
         assert_eq!(p.path(), "acme/sandbox/widgets");
     }
 
